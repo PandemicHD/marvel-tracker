@@ -2,16 +2,17 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import time
 
 def get_rank(username):
     url = f"https://tracker.gg/marvel-rivals/profile/ign/{username}/overview"
 
     # Set up Chrome options for headless mode
     options = Options()
-    options.add_argument("--headless")  # Run without a GUI
-    options.add_argument("--no-sandbox")  # Required for running inside Docker
+    options.add_argument("--headless")  # Run without GUI
+    options.add_argument("--no-sandbox")  # Required for Docker
     options.add_argument("--disable-dev-shm-usage")  # Prevent memory issues
     options.add_argument("--disable-gpu")  # Disable GPU acceleration
     options.add_argument("--disable-blink-features=AutomationControlled")  # Avoid bot detection
@@ -22,10 +23,22 @@ def get_rank(username):
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
-        driver.get(url)
-        time.sleep(5)  # Allow JavaScript to load
+        driver.get(url)  # Open page
 
-        # Locate Rank and RS (update these if needed)
+        # ✅ SCROLL DOWN to load dynamic content
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        # ✅ WAIT for the rank element to be present (Max wait: 15 seconds)
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-v-61e89f95]"))
+        )
+
+        # ✅ WAIT for the RS element to be present
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-v-044b198d]"))
+        )
+
+        # ✅ Extract Rank & RS (Ensure selectors are correct)
         rank_element = driver.find_element(By.CSS_SELECTOR, "[data-v-61e89f95]")
         rs_element = driver.find_element(By.CSS_SELECTOR, "[data-v-044b198d]")
 
